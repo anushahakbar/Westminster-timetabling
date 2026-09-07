@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>University Timetable</title>
+<style>
+  :root{
+    --blue:#3f91d6;
+    --blue-dark:#2e82c7;
+    --line:#d3d3d3;
+    --dot:#dddddd;
+    --text:#333;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#fff;color:var(--text);font-family:Arial,Helvetica,sans-serif}
+  body{min-width:320px}
+  .page{width:100%;max-width:900px;margin:0 auto}
+  .brand{
+    height:72px;display:flex;align-items:center;justify-content:space-between;
+    padding:5px 10px 4px;background:#fff;border-bottom:1px solid #ddd;
+  }
+  .brand-name{
+    font-weight:800;font-size:27px;line-height:.88;letter-spacing:-1.6px;color:#151515;
+    text-transform:uppercase;max-width:310px;
+  }
+  .brand-name span{display:block}
+  .menu{
+    width:45px;height:49px;border:0;border-radius:5px;background:var(--blue);
+    color:white;font-size:28px;line-height:1;cursor:pointer;
+  }
+  .toolbar{
+    height:53px;background:var(--blue);display:flex;align-items:center;
+    justify-content:space-between;padding:0 10px;margin:10px 10px 0;border-radius:5px 5px 0 0;
+  }
+  .tools{display:flex;gap:14px;align-items:center}
+  .tool{
+    width:34px;height:34px;border:1.5px solid white;border-radius:50%;
+    background:transparent;color:white;display:grid;place-items:center;
+    font-size:19px;cursor:pointer;padding:0;
+  }
+  .calendar{font-size:18px}
+  .grid{font-size:17px}
+  .datebar{
+    height:31px;margin:0 10px;border-left:1px solid #ccc;border-right:1px solid #ccc;
+    border-bottom:1px solid #c7c7c7;background:#f7f7f7;display:flex;align-items:center;
+    justify-content:center;color:var(--blue);font-weight:bold;font-size:16px;
+  }
+  .schedule-wrap{
+    margin:0 10px;border:1px solid #ccc;border-top:0;overflow:auto;
+    height:calc(100vh - 250px);min-height:500px;max-height:1100px;
+    scroll-behavior:smooth;
+  }
+  .schedule{position:relative;min-width:430px;height:840px;background:white}
+  .hour{
+    height:105px;display:grid;grid-template-columns:49px 1fr;
+    border-bottom:1px solid #ccc;
+  }
+  .time{
+    border-right:1px solid #c8c8c8;padding:12px 7px 0 0;text-align:right;
+    color:var(--blue);font-weight:bold;font-size:14px;background:#fff;
+  }
+  .slot{
+    position:relative;
+    background:
+      repeating-linear-gradient(to bottom,
+        transparent 0, transparent 25px,
+        var(--dot) 25px, var(--dot) 26px);
+  }
+  .slot:after{
+    content:"";position:absolute;left:0;right:0;top:0;border-top:1px solid #eee;
+  }
+  .event{
+    position:absolute;left:52px;right:6px;top:10px;min-height:70px;
+    background:#eaf4fd;border-left:4px solid var(--blue);border-radius:2px;
+    padding:7px 9px;color:#1e5f94;font-size:13px;display:none;
+  }
+  .current-time{
+    position:absolute;left:49px;right:0;height:2px;background:#1689df;z-index:5;
+    display:none;
+  }
+  .current-time span{
+    position:absolute;right:0;top:-9px;background:var(--blue);color:#fff;
+    padding:2px 4px;font-size:12px;font-weight:bold;border-radius:2px 0 0 2px;
+  }
+  .footer{
+    text-align:center;padding:8px 10px 14px;color:#444;font-size:14px;
+  }
+  .updated{color:var(--blue);font-weight:bold;font-size:15px;line-height:19px}
+  .footer-links{margin-top:8px;display:flex;justify-content:center;gap:18px;align-items:center}
+  .cmisgo{font-size:29px;font-weight:800;letter-spacing:-2px;color:#222}
+  .cmisgo em{font-style:normal;color:#ef4e55}
+  .copyright{font-size:10px;color:#777;line-height:13px;margin-top:7px}
+  .drawer{
+    position:fixed;top:0;right:-280px;width:270px;height:100%;background:white;
+    box-shadow:-3px 0 12px #0002;z-index:20;transition:right .2s;padding:20px;
+  }
+  .drawer.open{right:0}
+  .drawer button{display:block;width:100%;padding:12px;margin:8px 0;border:1px solid #ddd;background:#f7f7f7;border-radius:4px}
+  @media(max-width:520px){
+    .brand{height:72px}
+    .brand-name{font-size:24px}
+    .schedule-wrap{height:calc(100vh - 245px)}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="brand">
+    <div class="brand-name"><span>UNIVERSITY OF</span><span>WESTMINSTER ▦</span></div>
+    <button class="menu" aria-label="Open menu">≡</button>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <div class="tools">
+        <button class="tool" id="prev" aria-label="Previous day">←</button>
+        <button class="tool calendar" id="today" aria-label="Calendar">▦</button>
+      </div>
+      <div class="tools">
+        <button class="tool grid" id="jump" aria-label="Jump to current time">▦</button>
+        <button class="tool" id="next" aria-label="Next day">→</button>
+      </div>
+    </div>
+
+    <div class="datebar" id="date">Mon 7 Sep 2026</div>
+
+    <div class="schedule-wrap" id="scroller">
+      <div class="schedule" id="schedule"></div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="updated">Timetabled events last full update 5:20 am on 7<br>September 2026</div>
+    <div class="footer-links">
+      <span>Accessibility statement</span>
+      <span class="cmisgo">cmis<em>go</em></span>
+      <span>About</span>
+    </div>
+    <div class="copyright">
+      © Copyright - Advanced Computer Software Group Ltd All Rights Reserved.<br>
+      Advanced is a trading name of Advanced Business Software and Solutions Limited.
+    </div>
+  </footer>
+</div>
+
+<aside class="drawer" id="drawer">
+  <button id="closeMenu">Close</button>
+  <button>Timetable</button>
+  <button>Calendar</button>
+  <button>Settings</button>
+</aside>
+
+<script>
+const schedule = document.getElementById('schedule');
+const scroller = document.getElementById('scroller');
+const dateEl = document.getElementById('date');
+
+const startHour = 8, endHour = 21;
+for(let h=startHour; h<=endHour; h++){
+  const row=document.createElement('div');
+  row.className='hour';
+  const time=document.createElement('div');
+  time.className='time';
+  const suffix=h>=12?'PM':'AM';
+  const shown=h%12 || 12;
+  time.innerHTML = `${shown}<small>${suffix}</small>`;
+  time.querySelector('small').style.fontSize='9px';
+  const slot=document.createElement('div');
+  slot.className='slot';
+  row.append(time,slot);
+  schedule.appendChild(row);
+}
+
+// A subtle current-time indicator matching the supplied reference.
+// 9:39 PM is shown only when the timetable reaches that time.
+const currentMinutes = 21*60+39;
+const y = (currentMinutes-startHour*60)/60*105;
+const line=document.createElement('div');
+line.className='current-time';
+line.style.top=y+'px';
+line.innerHTML='<span>9:39</span>';
+schedule.appendChild(line);
+if(currentMinutes >= startHour*60 && currentMinutes <= endHour*60) line.style.display='block';
+
+let date = new Date(2026,8,7);
+function renderDate(){
+  dateEl.textContent=date.toLocaleDateString('en-GB',{
+    weekday:'short',day:'numeric',month:'short',year:'numeric'
+  });
+}
+document.getElementById('prev').onclick=()=>{date.setDate(date.getDate()-1);renderDate()};
+document.getElementById('next').onclick=()=>{date.setDate(date.getDate()+1);renderDate()};
+document.getElementById('today').onclick=()=>{date=new Date(2026,8,7);renderDate();scroller.scrollTop=0};
+document.getElementById('jump').onclick=()=>{
+  scroller.scrollTo({top:Math.max(0,y-120),behavior:'smooth'});
+};
+
+const drawer=document.getElementById('drawer');
+document.querySelector('.menu').onclick=()=>drawer.classList.add('open');
+document.getElementById('closeMenu').onclick=()=>drawer.classList.remove('open');
+</script>
+</body>
+</html>
