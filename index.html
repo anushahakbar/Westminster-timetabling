@@ -908,16 +908,14 @@ function eventsFor(d){
 
     if(dow===3){
 
+      const finish530 =
+        [23, 30, 7, 14, 21, 28].includes(d.getDate());
+
       out.push({
 
         start:'14:00',
 
-        end:
-          Math.floor(
-            (d.getDate()+d.getMonth())/3
-          )%3===0
-            ? '17:30'
-            : '17:00',
+        end: finish530 ? '17:30' : '17:00',
 
         title:'Regular class',
 
