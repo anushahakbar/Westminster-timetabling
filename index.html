@@ -1,3 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>University of Westminster Timetable</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#fff;
+  color:#333;
+  font-family:Arial,Helvetica,sans-serif;
+}
+
+:root{
+  --blue:#3d91d6;
+  --dark:#287dbf;
+  --line:#d0d0d0;
+}
+
+.header{
+  height:86px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 22px;
+  border-bottom:1px solid #ddd;
+}
+
+.logo{
+  font-weight:800;
+  color:#111;
+  font-size:29px;
+  line-height:.86;
+  letter-spacing:-1.5px;
+}
+
+.logo small{
+  font-size:18px;
+}
+
+.menu{
+  width:50px;
+  height:50px;
+  border:0;
+  border-radius:5px;
+  background:var(--blue);
+  color:#fff;
+  font-size:29px;
+  cursor:pointer;
+}
+
+.app{
+  max-width:1000px;
+  margin:14px auto 0;
+  padding:0 12px;
+}
+
+.toolbar{
+  display:flex;
+  gap:7px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+
+.btn{
+  padding:9px 15px;
+  border:1px solid #ccc;
+  background:#fff;
+  border-radius:4px;
+  color:#287dbf;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.btn.active{
+  background:var(--blue);
+  color:#fff;
+  border-color:var(--blue);
+}
+
+.today{
+  margin-left:auto;
+  color:#555;
+}
+
+.box{
+  border:1px solid #ccc;
+  border-radius:5px;
+  overflow:hidden;
+  box-shadow:0 1px 3px #ddd;
+  background:#fff;
+}
+
+.bluebar{
+  height:58px;
+  background:var(--blue);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 10px;
+}
+
+.side{
+  display:flex;
+  gap:17px;
+}
+
+.circle{
+  width:39px;
+  height:39px;
+  border-radius:50%;
+  border:1.5px solid #fff;
+  background:transparent;
+  color:#fff;
+  font-size:22px;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+}
+
+.circle.small{
+  font-size:19px;
+}
+
+.datebar{
+  height:42px;
+  border-bottom:1px solid #ccc;
+  text-align:center;
+  padding:10px;
+  color:#358bd0;
+  font-weight:700;
+  font-size:18px;
+}
+
+.daygrid{
+  display:grid;
+  grid-template-columns:68px 1fr;
+  min-height:720px;
+}
+
+.times{
+  border-right:1px solid #c9c9c9;
+}
+
+.time{
+  height:120px;
+  border-bottom:1px solid #d0d0d0;
+  text-align:right;
+  padding:10px 7px;
+  color:#358bd0;
+  font-weight:700;
+}
+
+.hours{
+  position:relative;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 29px,
+      #eee 30px,
+      transparent 31px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 119px,
+      #d0d0d0 120px
+    );
+}
+
+.event{
+  position:absolute;
+  left:7px;
+  right:7px;
+  border-radius:4px;
+  background:var(--blue);
+  border-left:5px solid var(--dark);
+  color:#fff;
+  padding:8px 10px;
+  box-shadow:0 1px 3px #999;
+  overflow:hidden;
+}
+
+.event.induction{
+  background:#6e8ba8;
+  border-left-color:#526c86;
+}
+
+.event.extra{
+  background:#687b8d;
+  border-left-color:#50616f;
+}
+
+.event b{
+  font-size:14px;
+}
+
+.event span{
+  display:block;
+  font-size:12px;
+  margin-top:4px;
+}
+
+.empty{
+  text-align:center;
+  color:#aaa;
+  padding-top:40px;
+  font-size:14px;
+}
+
+.footer{
+  text-align:center;
+  padding:16px 5px 24px;
+  color:#666;
+  font-size:14px;
+}
+
+.update{
+  color:#358bd0;
+  font-weight:700;
+  font-size:16px;
+}
+
+.cmis{
+  font-size:25px;
+  font-weight:800;
+  color:#222;
+  margin:10px;
+}
+
+.cmis span{
+  color:#222;
+}
+
+.cmis i{
+  color:#e22;
+  font-style:normal;
+}
+
+.copy{
+  font-size:11px;
+  color:#999;
+  line-height:1.4;
+}
+
+.hidden{
+  display:none!important;
+}
+
+
+/* WEEK VIEW */
+
+.weekwrap{
+  overflow:auto;
+}
+
+.week{
+  min-width:850px;
+  display:grid;
+  grid-template-columns:58px repeat(7,1fr);
+}
+
+.wkhead{
+  height:55px;
+  text-align:center;
+  color:#358bd0;
+  font-weight:700;
+  padding:8px 2px;
+  border-right:1px solid #ddd;
+  border-bottom:1px solid #ccc;
+}
+
+.wkhead span{
+  display:block;
+  color:#777;
+  font-size:11px;
+  font-weight:400;
+  margin-top:3px;
+}
+
+.wktime{
+  border-right:1px solid #ccc;
+}
+
+.wktime .time{
+  height:120px;
+}
+
+.wkcol{
+  height:720px;
+  position:relative;
+  border-right:1px solid #ddd;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 29px,
+      #eee 30px,
+      transparent 31px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 119px,
+      #d0d0d0 120px,
+      transparent 121px
+    );
+}
+
+.wkcol .event{
+  left:2px;
+  right:2px;
+  padding:5px;
+  font-size:11px;
+}
+
+.wkcol .event b{
+  font-size:11px;
+}
+
+
+/* MONTH VIEW */
+
+.monthhead{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  background:#eee;
+}
+
+.monthhead div{
+  text-align:center;
+  padding:9px 2px;
+  color:#358bd0;
+  font-weight:700;
+  font-size:12px;
+}
+
+.monthgrid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  grid-auto-rows:minmax(108px,1fr);
+}
+
+.cell{
+  border-right:1px solid #ddd;
+  border-bottom:1px solid #ddd;
+  padding:6px;
+  min-height:108px;
+}
+
+.cell.other{
+  background:#fafafa;
+  color:#bbb;
+}
+
+.num{
+  font-weight:700;
+  font-size:13px;
+  margin-bottom:5px;
+}
+
+.cell.today .num{
+  display:inline-grid;
+  place-items:center;
+  width:25px;
+  height:25px;
+  border-radius:50%;
+  background:var(--blue);
+  color:#fff;
+}
+
+.pill{
+  padding:3px 0;
+  margin:3px 0;
+  color:#358bd0;
+  background:transparent;
+  font-size:11px;
+  font-weight:700;
+  white-space:normal;
+  overflow:visible;
+}
+
+.pill.induction{
+  color:#526c86;
+  background:transparent;
+}
+
+.pill.extra{
+  color:#52616f;
+  background:transparent;
+}
+
+
+/* SEMESTER VIEW */
+
+.sem{
+  padding:15px;
+}
+
+.sem h2{
+  margin:0;
+  color:#358bd0;
+  font-size:20px;
+}
+
+.sem p{
+  color:#777;
+  margin:5px 0 15px;
+}
+
+.semrow{
+  display:grid;
+  grid-template-columns:120px 1fr auto;
+  gap:12px;
+  padding:13px 5px;
+  border-bottom:1px solid #ddd;
+  align-items:center;
+}
+
+.semdate{
+  font-weight:700;
+  color:#358bd0;
+}
+
+.tag{
+  border-radius:12px;
+  padding:5px 9px;
+  background:#e7f3fb;
+  color:#287dbf;
+  font-size:11px;
+  white-space:nowrap;
+}
+
+.tag.induction{
+  background:#e8edf2;
+  color:#526c86;
+}
+
+.tag.extra{
+  background:#edf0f2;
+  color:#52616f;
+}
+
+
+/* MOBILE */
+
+@media(max-width:650px){
+
+  .header{
+    height:76px;
+    padding:8px 12px;
+  }
+
+  .logo{
+    font-size:22px;
+  }
+
+  .menu{
+    width:44px;
+    height:44px;
+  }
+
+  .app{
+    padding:0 8px;
+  }
+
+  .daygrid{
+    grid-template-columns:58px 1fr;
+  }
+
+  .time{
+    font-size:14px;
+  }
+
+  .today{
+    margin-left:0;
+  }
+
+  .semrow{
+    grid-template-columns:82px 1fr;
+  }
+
+  .semrow .tag{
+    display:none;
+  }
+
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+  <div class="logo">
+    UNIVERSITY OF<br>
+    WESTMINSTER<small>▦</small>
+  </div>
+
+  <button class="menu">
+    ≡
+  </button>
+
+</header>
+
+
+<main class="app">
+
+
+  <div class="toolbar">
+
+    <button class="btn active" data-view="day">
+      Day
+    </button>
+
+    <button class="btn" data-view="week">
+      Week
+    </button>
+
+    <button class="btn" data-view="month">
+      Month
+    </button>
+
+    <button class="btn" data-view="semester">
+      Semester
+    </button>
+
+    <button class="btn today" id="today">
+      Today
+    </button>
+
+  </div>
+
+
+
+  <!-- DAY -->
+
+  <section id="day">
+
+    <div class="box">
+
+      <div class="bluebar">
+
+        <div class="side">
+
+          <button class="circle" id="prev">
+            ←
+          </button>
+
+          <button class="circle small" id="pick">
+            ▦
+          </button>
+
+        </div>
+
+
+        <div class="side">
+
+          <button class="circle small" id="toWeek">
+            ▦
+          </button>
+
+          <button class="circle" id="next">
+            →
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="datebar" id="dayDate"></div>
+
+
+      <div class="daygrid">
+
+        <div class="times" id="times"></div>
+
+        <div class="hours" id="hours"></div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- WEEK -->
+
+  <section id="week" class="hidden">
+
+    <div class="box weekwrap">
+
+      <div class="bluebar">
+
+        <div class="side">
+
+          <button class="circle" id="prevW">
+            ←
+          </button>
+
+          <button class="circle small">
+            ▦
+          </button>
+
+        </div>
+
+
+        <div class="side">
+
+          <button class="circle small">
+            ▦
+          </button>
+
+          <button class="circle" id="nextW">
+            →
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="week" id="weekGrid"></div>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- MONTH -->
+
+  <section id="month" class="hidden">
+
+    <div class="box">
+
+      <div class="bluebar">
+
+        <div class="side">
+
+          <button class="circle" id="prevM">
+            ←
+          </button>
+
+          <button class="circle small">
+            ▦
+          </button>
+
+        </div>
+
+
+        <div class="side">
+
+          <button class="circle small">
+            ▦
+          </button>
+
+          <button class="circle" id="nextM">
+            →
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="datebar" id="monthTitle"></div>
+
+
+      <div class="monthhead" id="monthHead"></div>
+
+
+      <div class="monthgrid" id="monthGrid"></div>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- SEMESTER -->
+
+  <section id="semester" class="hidden">
+
+    <div class="box">
+
+      <div class="bluebar">
+
+        <div class="side">
+
+          <button class="circle small">
+            ▦
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="sem" id="semesterList"></div>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- FOOTER -->
+
+  <div class="footer">
+
+    <div class="update">
+      Timetabled events last full update 5:20 am on 7<br>
+      September 2026
+    </div>
+
+
+    <div class="cmis">
+      cmis<span>go</span><i>●</i>
+    </div>
+
+
+    <div>
+      Accessibility statement
+      &nbsp;&nbsp;&nbsp;
+      About
+    </div>
+
+
+    <div class="copy">
+      © Copyright - Advanced Computer Software Group Ltd All Rights Reserved.<br>
+      Advanced is a trading name of Advanced Business Software and Solutions Limited.
+    </div>
+
+  </div>
+
+</main>
+
+
+
+<script>
+
+/* =========================================================
+   SEMESTER DATES
+========================================================= */
+
+const start = new Date(2026,8,17);
+
+const regularEnd = new Date(2026,11,18);
+
+
+
+/* =========================================================
+   OCCASIONAL EXTRA CLASSES
+========================================================= */
+
+const extraEvents = [
+
+  ['2026-09-24','09:30','11:00','Extra class','extra'],
+
+  ['2026-10-02','10:00','12:00','Additional class','extra'],
+
+  ['2026-10-14','13:00','15:00','Additional class','extra'],
+
+  ['2026-10-29','09:00','11:00','Extra class','extra'],
+
+  ['2026-11-06','11:00','13:00','Additional class','extra'],
+
+  ['2026-11-19','15:30','17:00','Extra class','extra'],
+
+  ['2026-12-03','10:00','12:00','Additional class','extra'],
+
+  ['2026-12-11','13:30','15:00','Extra class','extra']
+
+];
+
+
+
+/* =========================================================
+   DATE HELPERS
+========================================================= */
+
+function dkey(d){
+
+  return `${d.getFullYear()}-${
+    String(d.getMonth()+1).padStart(2,'0')
+  }-${
+    String(d.getDate()).padStart(2,'0')
+  }`;
+
+}
+
+
+function parseKey(s){
+
+  let [y,m,d]=s.split('-').map(Number);
+
+  return new Date(y,m-1,d);
+
+}
+
+
+function fmt(
+  d,
+  opt={
+    weekday:'short',
+    day:'numeric',
+    month:'short',
+    year:'numeric'
+  }
+){
+
+  return d.toLocaleDateString(
+    'en-GB',
+    opt
+  );
+
+}
+
+
+function timeMin(s){
+
+  let [h,m]=s.split(':').map(Number);
+
+  return h*60+m;
+
+}
+
+
+function clock(h){
+
+  if(h===12) return '12PM';
+
+  if(h>12) return (h-12)+'PM';
+
+  return h+'AM';
+
+}
+
+
+
+/* =========================================================
+   EVENTS FOR EACH DATE
+========================================================= */
+
 function eventsFor(d){
 
   const key=dkey(d);
@@ -35,6 +888,11 @@ function eventsFor(d){
     /* EVERY MONDAY */
 
     if(dow===1){
+
+      /*
+        20% of Mondays finish at 4:30.
+        Using every 5th Monday gives exactly 20%.
+      */
 
       let mondayIndex=0;
 
@@ -94,6 +952,11 @@ function eventsFor(d){
         (d.getDate()+d.getMonth())/3
       )%2===0
     ){
+
+      /*
+        40% of Thursday classes finish at 4:30.
+        Using 2 out of every 5 qualifying Thursdays.
+      */
 
       let thursdayIndex=0;
 
@@ -162,3 +1025,811 @@ function eventsFor(d){
   return out;
 
 }
+
+
+
+/* =========================================================
+   IMPORTANT:
+   OPEN ON THE REAL DATE WHEN THE SITE IS VISITED
+========================================================= */
+
+function getToday(){
+
+  const today = new Date();
+
+  return new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
+
+}
+
+
+let current = getToday();
+
+
+let monthCursor = new Date(
+  current.getFullYear(),
+  current.getMonth(),
+  1
+);
+
+
+
+const hours=[
+  8,9,10,11,12,13,14,
+  15,16,17,18,19,20,21
+];
+
+
+
+/* =========================================================
+   DAY VIEW
+========================================================= */
+
+function renderDay(){
+
+  document.getElementById(
+    'dayDate'
+  ).textContent=
+
+    fmt(
+      current,
+      {
+        weekday:'short',
+        day:'numeric',
+        month:'short',
+        year:'numeric'
+      }
+    );
+
+
+  document.getElementById(
+    'times'
+  ).innerHTML=
+
+    hours.map(h=>`
+
+      <div class="time">
+        ${clock(h)}
+      </div>
+
+    `).join('');
+
+
+  const ev=eventsFor(current);
+
+
+  document.getElementById(
+    'hours'
+  ).innerHTML=
+
+    ev.length
+
+      ?
+
+      ev.map(e=>{
+
+        const top=
+          (timeMin(e.start)-8*60)*2;
+
+
+        const height=
+          (timeMin(e.end)-timeMin(e.start))*2;
+
+
+        return `
+
+          <div
+            class="event ${e.type}"
+            style="
+              top:${top}px;
+              height:${Math.max(height,30)}px
+            "
+          >
+
+            <b>
+              ${e.title}
+            </b>
+
+            <span>
+              ${e.start}–${e.end}
+            </span>
+
+          </div>
+
+        `;
+
+      }).join('')
+
+      :
+
+      '<div class="empty">No timetabled events</div>';
+
+}
+
+
+
+/* =========================================================
+   WEEK VIEW
+========================================================= */
+
+function renderWeek(){
+
+  let monday=new Date(current);
+
+
+  monday.setDate(
+    current.getDate()-
+    (current.getDay()+6)%7
+  );
+
+
+  const names=[
+    'Mon','Tue','Wed',
+    'Thu','Fri','Sat','Sun'
+  ];
+
+
+  let head=
+    '<div class="wktime"></div>';
+
+
+  head+=names.map((n,i)=>{
+
+    let x=new Date(monday);
+
+    x.setDate(
+      monday.getDate()+i
+    );
+
+
+    return `
+
+      <div class="wkhead">
+
+        ${n}
+
+        <span>
+
+          ${x.getDate()}
+
+          ${x.toLocaleDateString(
+            'en-GB',
+            {month:'short'}
+          )}
+
+        </span>
+
+      </div>
+
+    `;
+
+  }).join('');
+
+
+  let body=
+
+    '<div class="wktime">'+
+
+    hours.map(h=>`
+
+      <div class="time">
+        ${clock(h)}
+      </div>
+
+    `).join('')+
+
+    '</div>';
+
+
+
+  for(let i=0;i<7;i++){
+
+    let x=new Date(monday);
+
+    x.setDate(
+      monday.getDate()+i
+    );
+
+
+    let ev=eventsFor(x);
+
+
+    body+=`
+
+      <div class="wkcol">
+
+        ${ev.map(e=>{
+
+          let top=
+            (timeMin(e.start)-480)*2;
+
+
+          let h=
+            (timeMin(e.end)-timeMin(e.start))*2;
+
+
+          return `
+
+            <div
+              class="event ${e.type}"
+              style="
+                top:${top}px;
+                height:${Math.max(h,28)}px
+              "
+            >
+
+              <b>
+                ${e.title}
+              </b>
+
+              <span>
+                ${e.start}–${e.end}
+              </span>
+
+            </div>
+
+          `;
+
+        }).join('')}
+
+      </div>
+
+    `;
+
+  }
+
+
+  document.getElementById(
+    'weekGrid'
+  ).innerHTML=head+body;
+
+}
+
+
+
+/* =========================================================
+   MONTH VIEW
+========================================================= */
+
+function renderMonth(){
+
+  document.getElementById(
+    'monthTitle'
+  ).textContent=
+
+    monthCursor.toLocaleDateString(
+      'en-GB',
+      {
+        month:'long',
+        year:'numeric'
+      }
+    );
+
+
+  const names=[
+    'Mon','Tue','Wed',
+    'Thu','Fri','Sat','Sun'
+  ];
+
+
+  document.getElementById(
+    'monthHead'
+  ).innerHTML=
+
+    names.map(
+      x=>`<div>${x}</div>`
+    ).join('');
+
+
+  let first=
+    (monthCursor.getDay()+6)%7;
+
+
+  let days=
+    new Date(
+      monthCursor.getFullYear(),
+      monthCursor.getMonth()+1,
+      0
+    ).getDate();
+
+
+  let prev=
+    new Date(
+      monthCursor.getFullYear(),
+      monthCursor.getMonth(),
+      0
+    ).getDate();
+
+
+  let cells=[];
+
+
+
+  for(let i=0;i<42;i++){
+
+    let num=i-first+1;
+
+    let date;
+
+    let other=false;
+
+
+
+    if(num<1){
+
+      date=new Date(
+        monthCursor.getFullYear(),
+        monthCursor.getMonth()-1,
+        prev+num
+      );
+
+      other=true;
+
+    }
+
+    else if(num>days){
+
+      date=new Date(
+        monthCursor.getFullYear(),
+        monthCursor.getMonth()+1,
+        num-days
+      );
+
+      other=true;
+
+    }
+
+    else{
+
+      date=new Date(
+        monthCursor.getFullYear(),
+        monthCursor.getMonth(),
+        num
+      );
+
+    }
+
+
+
+    let ev=eventsFor(date);
+
+
+
+    cells.push(`
+
+      <div
+        class="
+          cell
+          ${other?'other':''}
+          ${
+            dkey(date)===dkey(new Date())
+            ?'today'
+            :''
+          }
+        "
+      >
+
+        <div class="num">
+          ${date.getDate()}
+        </div>
+
+
+        ${ev.map(e=>`
+
+          <div class="pill ${e.type}">
+
+            ${e.start}–${e.end}
+            ${e.title}
+
+          </div>
+
+        `).join('')}
+
+      </div>
+
+    `);
+
+  }
+
+
+  document.getElementById(
+    'monthGrid'
+  ).innerHTML=cells.join('');
+
+}
+
+
+
+/* =========================================================
+   SEMESTER VIEW
+========================================================= */
+
+function renderSemester(){
+
+  let all=[];
+
+
+  for(
+    let d=new Date(start);
+    d<=regularEnd;
+    d.setDate(
+      d.getDate()+1
+    )
+  ){
+
+    eventsFor(d).forEach(e=>{
+
+      all.push({
+
+        date:new Date(d),
+
+        ...e
+
+      });
+
+    });
+
+  }
+
+
+  all.sort(
+    (a,b)=>
+      a.date-b.date ||
+      timeMin(a.start)-
+      timeMin(b.start)
+  );
+
+
+  document.getElementById(
+    'semesterList'
+  ).innerHTML=
+
+    `
+
+      <h2>
+        Semester timetable
+      </h2>
+
+      <p>
+        17 September 2026 –
+        18 December 2026
+      </p>
+
+    `
+
+    +
+
+    all.map(e=>`
+
+      <div class="semrow">
+
+        <div class="semdate">
+
+          ${fmt(
+            e.date,
+            {
+              weekday:'short',
+              day:'numeric',
+              month:'short'
+            }
+          )}
+
+        </div>
+
+
+        <div>
+
+          <b>
+            ${e.title}
+          </b>
+
+          <br>
+
+          <small>
+            ${e.start}–${e.end}
+          </small>
+
+        </div>
+
+
+        <div class="tag ${e.type}">
+
+          ${
+            e.type==='induction'
+
+              ? 'Welcome & Induction'
+
+              : e.type==='extra'
+
+                ? 'Occasional extra'
+
+                : e.end==='17:30'
+
+                  ? 'Extended session'
+
+                  : 'Regular class'
+          }
+
+        </div>
+
+      </div>
+
+    `).join('');
+
+}
+
+
+
+/* =========================================================
+   VIEW SWITCHING
+========================================================= */
+
+function show(view){
+
+  [
+    'day',
+    'week',
+    'month',
+    'semester'
+  ].forEach(v=>{
+
+    document
+      .getElementById(v)
+      .classList
+      .toggle(
+        'hidden',
+        v!==view
+      );
+
+  });
+
+
+  document
+    .querySelectorAll(
+      '.btn[data-view]'
+    )
+    .forEach(b=>{
+
+      b.classList.toggle(
+        'active',
+        b.dataset.view===view
+      );
+
+    });
+
+}
+
+
+
+/* =========================================================
+   VIEW BUTTONS
+========================================================= */
+
+document
+  .querySelectorAll(
+    '.btn[data-view]'
+  )
+  .forEach(b=>{
+
+    b.onclick=()=>{
+
+      show(b.dataset.view);
+
+    };
+
+  });
+
+
+
+/* =========================================================
+   DAY NAVIGATION
+========================================================= */
+
+document.getElementById(
+  'prev'
+).onclick=()=>{
+
+  current.setDate(
+    current.getDate()-1
+  );
+
+  renderDay();
+  renderWeek();
+
+};
+
+
+document.getElementById(
+  'next'
+).onclick=()=>{
+
+  current.setDate(
+    current.getDate()+1
+  );
+
+  renderDay();
+  renderWeek();
+
+};
+
+
+
+/* =========================================================
+   WEEK NAVIGATION
+========================================================= */
+
+document.getElementById(
+  'prevW'
+).onclick=()=>{
+
+  current.setDate(
+    current.getDate()-7
+  );
+
+  renderWeek();
+  renderDay();
+
+};
+
+
+document.getElementById(
+  'nextW'
+).onclick=()=>{
+
+  current.setDate(
+    current.getDate()+7
+  );
+
+  renderWeek();
+  renderDay();
+
+};
+
+
+
+/* =========================================================
+   MONTH NAVIGATION
+========================================================= */
+
+document.getElementById(
+  'prevM'
+).onclick=()=>{
+
+  monthCursor.setMonth(
+    monthCursor.getMonth()-1
+  );
+
+  renderMonth();
+
+};
+
+
+document.getElementById(
+  'nextM'
+).onclick=()=>{
+
+  monthCursor.setMonth(
+    monthCursor.getMonth()+1
+  );
+
+  renderMonth();
+
+};
+
+
+
+/* =========================================================
+   TODAY BUTTON
+========================================================= */
+
+document.getElementById(
+  'today'
+).onclick=()=>{
+
+  current=getToday();
+
+
+  monthCursor=new Date(
+    current.getFullYear(),
+    current.getMonth(),
+    1
+  );
+
+
+  show('day');
+
+  render();
+
+};
+
+
+
+/* =========================================================
+   DATE PICKER
+========================================================= */
+
+document.getElementById(
+  'pick'
+).onclick=()=>{
+
+  let x=prompt(
+    'Enter a date (YYYY-MM-DD):',
+    dkey(current)
+  );
+
+
+  if(
+    x &&
+    /^\d{4}-\d{2}-\d{2}$/.test(x)
+  ){
+
+    current=parseKey(x);
+
+
+    monthCursor=new Date(
+      current.getFullYear(),
+      current.getMonth(),
+      1
+    );
+
+
+    renderDay();
+
+    renderWeek();
+
+    show('day');
+
+  }
+
+};
+
+
+
+/* =========================================================
+   CALENDAR BUTTON
+========================================================= */
+
+document.getElementById(
+  'toWeek'
+).onclick=()=>{
+
+  show('week');
+
+};
+
+
+
+/* =========================================================
+   RENDER EVERYTHING
+========================================================= */
+
+function render(){
+
+  renderDay();
+
+  renderWeek();
+
+  renderMonth();
+
+  renderSemester();
+
+}
+
+
+
+/* =========================================================
+   INITIAL LOAD
+   ALWAYS START ON THE REAL CURRENT DAY
+========================================================= */
+
+show('day');
+
+render();
+
+</script>
+
+</body>
+</html>
